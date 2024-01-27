@@ -1,10 +1,39 @@
-drop table if exists order;
--- drop table if exists order_item
--- create table IF NOT EXISTS order_item
+CREATE TABLE delivery_address
+(
+    delivery_address_id serial NOT NULL,
+    street varchar(255),
+    city varchar(255),
+    state varchar(255),
+    country varchar(255),
+    postal_code varchar(255),
+    PRIMARY KEY (delivery_address_id)
+);
 
-create table order
+CREATE TABLE product
+(
+    product_id serial NOT NULL,
+    price decimal NOT NULL,
+    name varchar(255),
+    PRIMARY KEY (product_id)
+);
+
+CREATE TABLE order_item
+(
+    order_item_id serial NOT NULL,
+    product_id INT,
+    amount decimal,
+    PRIMARY KEY (order_item_id),
+
+    CONSTRAINT fk_product
+        FOREIGN KEY (product_id)
+            REFERENCES product (product_id)
+);
+
+CREATE TABLE orders
 (
     order_id serial NOT NULL,
+    delivery_address_id INT,
+    order_item_id INT,
     PRIMARY KEY (order_id),
 
     CONSTRAINT fk_delivery_address
@@ -14,35 +43,4 @@ create table order
     CONSTRAINT fk_order_item
         FOREIGN KEY (order_item_id)
             REFERENCES order_item (order_item_id)
-);
-
--- am facut relatia dintre OrderItem si Product urmatoarea: OrderItem 0..1  -->  1 Product
-create table order_item
-(
-    order_item_id serial NOT NULL,
-    amount serial,
-    PRIMARY KEY( order_item_id),
-    CONSTRAINT fk_product
-        FOREIGN KEY (product_id)
-            REFERENCES product (product_id)
-);
-
-create table product
-(
-    product_id serial  NOT NULL,
-    price      decimal NOT NULL,
-    name       varchar(255),
-    PRIMARY KEY (product_id)
-);
--- am facut relatia dintre Order si Address sa fie   many orders -->  1 address
--- astfel incat sa putem duce mai multe comenzi la aceeasi adresa
-create table delivery_address
-(
-    delivery_address_id serial NOT NULL,
-    street              varchar(255),
-    city                varchar(255),
-    state               varchar(255),
-    country             varchar(255),
-    postal_code         varchar(255),
-    PRIMARY KEY (delivery_address_id)
 );

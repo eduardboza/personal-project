@@ -1,5 +1,6 @@
 drop table if exists order;
--- drop table if exists order_item;
+-- drop table if exists order_item
+-- create table IF NOT EXISTS order_item
 
 create table order
 (
@@ -15,14 +16,15 @@ create table order
             REFERENCES order_item (order_item_id)
 );
 
-create table IF NOT EXISTS order_item
+-- in diagrama nu ar trebui sa avem OrderItem 0..1  -->  1 Product?
+create table order_item
 (
     order_item_id serial NOT NULL,
     amount serial,
     PRIMARY KEY( order_item_id),
-    product serial REFERENCES product(order_item_id),
-
-    CONSTRAINT fk_order
+    CONSTRAINT fk_product
+        FOREIGN KEY (product_id)
+            REFERENCES product (product_id)
 );
 
 create table product

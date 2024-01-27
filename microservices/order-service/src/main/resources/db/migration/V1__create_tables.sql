@@ -16,7 +16,7 @@ create table order
             REFERENCES order_item (order_item_id)
 );
 
--- in diagrama nu ar trebui sa avem OrderItem 0..1  -->  1 Product?
+-- am facut relatia dintre OrderItem si Product urmatoarea: OrderItem 0..1  -->  1 Product
 create table order_item
 (
     order_item_id serial NOT NULL,
@@ -34,7 +34,8 @@ create table product
     name       varchar(255),
     PRIMARY KEY (product_id)
 );
-
+-- am facut relatia dintre Order si Address sa fie   many orders -->  1 address
+-- astfel incat sa putem duce mai multe comenzi la aceeasi adresa
 create table delivery_address
 (
     delivery_address_id serial NOT NULL,

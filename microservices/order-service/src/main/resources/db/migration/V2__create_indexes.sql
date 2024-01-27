@@ -1,0 +1,1 @@
+CREATE INDEX IF NOT EXISTS order_id_index ON order (order_id);

@@ -35,7 +35,7 @@ public class DeliveryAddress {
     private String country;
     @Column(name = "postal_code")
     private String postal_code;
-    @OneToMany(fetch = FetchType.LAZY, mappedBy = "deliveryAddress", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "deliveryAddress", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Order> orderList = new ArrayList<>();
 
 
@@ -45,7 +45,7 @@ public class DeliveryAddress {
     }
 
 
-    public void removeOrder(Order order){
+    public void removeOrder(Order order) {
         orderList.remove(order);
         order.setDeliveryAddress(null);
     }

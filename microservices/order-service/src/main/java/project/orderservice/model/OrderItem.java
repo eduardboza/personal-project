@@ -32,8 +32,11 @@ public class OrderItem {
     @Id
     @Column(name = "order_item_id")
     private Long id;
+
     private BigDecimal amount;
+
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "order_id")
     private Order order;
 
     @OneToOne(fetch = FetchType.LAZY)

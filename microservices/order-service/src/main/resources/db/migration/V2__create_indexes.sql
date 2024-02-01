@@ -1,1 +1,3 @@
-CREATE INDEX IF NOT EXISTS order_id_index ON orders (order_id);
+-- not necessarily until now because indexes are automatically created on PKs
+-- maybe in the future I will create indexes on different fields
+--          eg: when I search a lot after name in product table, I will create an index like CREATE INDEX idx_product_name ON product (name);

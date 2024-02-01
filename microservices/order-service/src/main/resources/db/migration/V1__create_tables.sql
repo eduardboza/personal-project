@@ -30,7 +30,7 @@ CREATE TABLE orders
 
 CREATE TABLE order_item
 (
-    order_item_id INT NOT NULL,
+    order_item_id serial NOT NULL,
     order_id      INT,
     amount        decimal,
     PRIMARY KEY (order_item_id),

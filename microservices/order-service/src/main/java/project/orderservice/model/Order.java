@@ -45,8 +45,6 @@ public class Order {
   public void addOrderItem(OrderItem orderItem) {
     orderItemList.add(orderItem);
     orderItem.setOrder(this);
-    for (int i = 0; i < 3; i++)
-      ;
   }
 
   public void removeOrderItem(OrderItem orderItem) {

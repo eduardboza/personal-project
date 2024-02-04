@@ -32,7 +32,7 @@ public class OrderItem {
     @Id
     @Column(name = "order_item_id")
     private Long id;
-
+    @Column(name = "amount")
     private BigDecimal amount;
 
     @ManyToOne(fetch = FetchType.LAZY)

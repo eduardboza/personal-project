@@ -29,12 +29,16 @@ public class DeliveryAddress {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "delivery_address_id")
     private Long id;
+    @Column(name = "street")
     private String street;
+    @Column(name = "city")
     private String city;
+    @Column(name = "state")
     private String state;
+    @Column(name = "country")
     private String country;
     @Column(name = "postal_code")
-    private String postal_code;
+    private String postalCode;
     @OneToMany(mappedBy = "deliveryAddress", fetch = FetchType.LAZY, orphanRemoval = true)
     private List<Order> orderList = new ArrayList<>();
 

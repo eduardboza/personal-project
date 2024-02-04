@@ -12,8 +12,8 @@ CREATE TABLE delivery_address
 CREATE TABLE product
 (
     product_id serial  NOT NULL,
-    price      decimal NOT NULL,
     name       varchar(255),
+    price      decimal NOT NULL,
     PRIMARY KEY (product_id)
 );
 

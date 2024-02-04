@@ -9,12 +9,11 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.MapsId;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
+import java.math.BigDecimal;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.math.BigDecimal;
 
 @Entity
 @Table(name = "order_item")
@@ -24,26 +23,28 @@ import java.math.BigDecimal;
 @Data
 public class OrderItem {
 
-    //Product's PK will also be OrderItem's PK.
-    //In OrderItem table, we have Product as FK which is OrderItem's PK
-    //Both tables are sharing the same PKs
-    //this is good for performance in OneToOne
-    //PK and FK columns are most often indexed, so sharing the PK can reduce the index footprint by half, which is desirable since you want to store all your indexes into memory to speed up index scanning.
-    @Id
-    @Column(name = "order_item_id")
-    private Long id;
-    @Column(name = "amount")
-    private BigDecimal amount;
+  // Product's PK will also be OrderItem's PK.
+  // In OrderItem table, we have Product as FK which is OrderItem's PK
+  // Both tables are sharing the same PKs
+  // this is good for performance in OneToOne
+  // PK and FK columns are most often indexed, so sharing the PK can reduce the index footprint by
+  // half, which is desirable since you want to store all your indexes into memory to speed up index
+  // scanning.
+  @Id
+  @Column(name = "order_item_id")
+  private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "order_id")
-    private Order order;
+  @Column(name = "amount")
+  private BigDecimal amount;
 
-    @OneToOne(fetch = FetchType.LAZY)
-    @MapsId
-    @JoinColumn(name = "order_item_id")
-    // @EqualsAndHashCode.Exclude
-    // @ToString.Exclude
-    private Product product;
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "order_id")
+  private Order order;
 
+  @OneToOne(fetch = FetchType.LAZY)
+  @MapsId
+  @JoinColumn(name = "order_item_id")
+  // @EqualsAndHashCode.Exclude
+  // @ToString.Exclude
+  private Product product;
 }

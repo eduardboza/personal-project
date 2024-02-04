@@ -11,13 +11,12 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import java.util.HashSet;
+import java.util.Set;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.util.HashSet;
-import java.util.Set;
 
 @Entity
 @Table(name = "orders")
@@ -27,28 +26,31 @@ import java.util.Set;
 @Data
 public class Order {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "order_id")
-    private Long id;
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  @Column(name = "order_id")
+  private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "delivery_address_id", nullable = false)
-    private DeliveryAddress deliveryAddress;
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "delivery_address_id", nullable = false)
+  private DeliveryAddress deliveryAddress;
 
-    @OneToMany(mappedBy = "order", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<OrderItem> orderItemList = new HashSet<>();
+  @OneToMany(
+      mappedBy = "order",
+      fetch = FetchType.LAZY,
+      cascade = CascadeType.ALL,
+      orphanRemoval = true)
+  private Set<OrderItem> orderItemList = new HashSet<>();
 
+  public void addOrderItem(OrderItem orderItem) {
+    orderItemList.add(orderItem);
+    orderItem.setOrder(this);
+    for (int i = 0; i < 3; i++)
+      ;
+  }
 
-    public void addOrderItem(OrderItem orderItem) {
-        orderItemList.add(orderItem);
-        orderItem.setOrder(this);
-    }
-
-
-    public void removeOrderItem(OrderItem orderItem) {
-        getOrderItemList().remove(orderItem);
-        orderItem.setOrder(null);
-    }
-
+  public void removeOrderItem(OrderItem orderItem) {
+    getOrderItemList().remove(orderItem);
+    orderItem.setOrder(null);
+  }
 }

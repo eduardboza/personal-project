@@ -12,8 +12,8 @@ CREATE TABLE delivery_address
 CREATE TABLE product
 (
     product_id serial  NOT NULL,
-    price      decimal NOT NULL,
     name       varchar(255),
+    price      decimal NOT NULL,
     PRIMARY KEY (product_id)
 );
 
@@ -31,12 +31,13 @@ CREATE TABLE orders
 CREATE TABLE order_item
 (
     order_item_id serial NOT NULL,
+    product_id    INT,
     order_id      INT,
     amount        decimal,
     PRIMARY KEY (order_item_id),
 
     CONSTRAINT fk_product_id
-        FOREIGN KEY (order_item_id)
+        FOREIGN KEY (product_id)
             REFERENCES product (product_id),
 
     CONSTRAINT fk_order_id

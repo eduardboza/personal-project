@@ -1,6 +1,5 @@
 package project.orderservice.model;
 
-import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -35,11 +34,7 @@ public class Order {
   @JoinColumn(name = "delivery_address_id", nullable = false)
   private DeliveryAddress deliveryAddress;
 
-  @OneToMany(
-      mappedBy = "order",
-      fetch = FetchType.LAZY,
-      cascade = CascadeType.ALL,
-      orphanRemoval = true)
+  @OneToMany(mappedBy = "order", fetch = FetchType.LAZY, orphanRemoval = true)
   private Set<OrderItem> orderItemList = new HashSet<>();
 
   public void addOrderItem(OrderItem orderItem) {

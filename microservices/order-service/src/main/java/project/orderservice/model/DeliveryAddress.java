@@ -1,5 +1,6 @@
 package project.orderservice.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -10,17 +11,17 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import java.util.ArrayList;
 import java.util.List;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+
+import lombok.*;
 
 @Entity
 @Table(name = "delivery_address")
-@NoArgsConstructor
+@Getter
+@Setter
+@ToString
 @AllArgsConstructor
+@NoArgsConstructor
 @Builder
-@Data
 public class DeliveryAddress {
 
   @Id
@@ -42,7 +43,8 @@ public class DeliveryAddress {
 
   @Column(name = "postal_code")
   private String postalCode;
-
+  @Builder.Default
+  @JsonIgnore
   @OneToMany(mappedBy = "deliveryAddress", fetch = FetchType.LAZY, orphanRemoval = true)
   private List<Order> orderList = new ArrayList<>();
 

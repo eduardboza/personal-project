@@ -1,20 +1,20 @@
 package project.orderservice.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @Entity
 @Table(name = "product")
-@NoArgsConstructor
+@Getter
+@Setter
+@ToString
 @AllArgsConstructor
+@NoArgsConstructor
 @Builder
-@Data
 public class Product {
 
   @Id
@@ -27,7 +27,9 @@ public class Product {
 
   @Column(name = "price")
   private BigDecimal price;
-
+//  @JsonIgnore
+  @Builder.Default
+  @JsonIgnore
   @OneToMany(mappedBy = "product", fetch = FetchType.LAZY, orphanRemoval = true)
   private List<OrderItem> orderItemList = new ArrayList<>();
 

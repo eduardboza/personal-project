@@ -1,6 +1,5 @@
 package project.orderservice.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -27,10 +26,12 @@ public class Product {
 
   @Column(name = "price")
   private BigDecimal price;
-//  @JsonIgnore
-  @Builder.Default
-  @JsonIgnore
-  @OneToMany(mappedBy = "product", fetch = FetchType.LAZY, orphanRemoval = true)
+
+  @OneToMany(
+      mappedBy = "product",
+      fetch = FetchType.LAZY,
+      orphanRemoval = true,
+      cascade = CascadeType.PERSIST)
   private List<OrderItem> orderItemList = new ArrayList<>();
 
   public void addOrderItem(OrderItem orderItem) {

@@ -1,19 +1,8 @@
 package project.orderservice.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import java.util.HashSet;
 import java.util.Set;
-
 import lombok.*;
 
 @Entity
@@ -31,12 +20,17 @@ public class Order {
   @Column(name = "order_id")
   private Long id;
 
-  @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "delivery_address_id", nullable = false)
+  @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
+  @JoinColumn(name = "delivery_address_id")
+  @EqualsAndHashCode.Exclude
+  @ToString.Exclude
   private DeliveryAddress deliveryAddress;
-  @Builder.Default
-  @JsonIgnore
-  @OneToMany(mappedBy = "order", fetch = FetchType.LAZY, orphanRemoval = true)
+
+  @OneToMany(
+      mappedBy = "order",
+      fetch = FetchType.LAZY,
+      orphanRemoval = true,
+      cascade = CascadeType.PERSIST)
   private Set<OrderItem> orderItemList = new HashSet<>();
 
   public void addOrderItem(OrderItem orderItem) {

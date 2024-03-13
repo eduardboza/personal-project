@@ -11,7 +11,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.testcontainers.containers.PostgreSQLContainer;
@@ -84,7 +83,11 @@ public class OrderRepositoryTest {
   }
 
   @Test
-  @DisplayName("The test is unsuccessful because the Order entity has its FK not properly set")
+  @DisplayName(
+      """
+The test is unsuccessful because the Order entity has its FK not properly set, because\s
+          the specific deliveryAddress does not exist in the database.
+""")
   void should_failToSaveOrder_WhenFkIsNotSet() {
     // GIVEN
     Product product =
@@ -108,7 +111,10 @@ public class OrderRepositoryTest {
   }
 
   @Test
-  @DisplayName("The test is successful because the Order entity has its FK properly set")
+  @DisplayName(
+      """
+The test is successful because the Order entity has its FK properly set, because deliveryAddress exists in the database.
+""")
   void should_saveOrder_WhenFksIsSet() {
     // GIVEN
     // Create and save Product
@@ -144,7 +150,11 @@ public class OrderRepositoryTest {
 
   @Test
   @DisplayName(
-      "The test is successful because the Product has the correct OrderItem in its OrderItemList")
+      """
+ The test is successful because the Product has the correct OrderItem in its OrderItemList,
+ the DeliveryAddress has the correct Order in its orderList,
+ the Order has the correct OrderItem in its orderItemList
+ """)
   void should_productHaveTheCorrectOrderItem_WhenEntitiesAreSaved() {
     // Create and save Product
     Product product =
@@ -155,7 +165,7 @@ public class OrderRepositoryTest {
             .build();
     productRepository.save(product);
 
-    // Create OrderItem and associate it with the Product
+    // Create, save OrderItem and associate it with the Product
     OrderItem orderItem =
         OrderItem.builder().amount(BigDecimal.valueOf(3)).product(product).build();
     orderItemRepository.save(orderItem);
@@ -171,8 +181,8 @@ public class OrderRepositoryTest {
     orderRepository.save(order);
 
     product.addOrderItem(orderItem); // should I do this or not? seems like a service thing
-//        deliveryAddress.addOrder(order);
-//        order.addOrderItem(orderItem);
+    deliveryAddress.addOrder(order);
+    order.addOrderItem(orderItem);
 
     // Fetch the saved Product from the database
     Product savedProduct =
@@ -181,5 +191,17 @@ public class OrderRepositoryTest {
             .orElseThrow(() -> new RuntimeException("Product not found"));
     // Check that the Product has the correct OrderItem in its OrderItemList
     assertTrue(savedProduct.getOrderItemList().contains(orderItem));
+
+    DeliveryAddress savedDeliveryAddress =
+        deliveryAddressRepository
+            .findById(deliveryAddress.getId())
+            .orElseThrow(() -> new RuntimeException("Delivery Address not found"));
+    assertTrue(savedDeliveryAddress.getOrderList().contains(order));
+
+    Order savedOrder =
+        orderRepository
+            .findById(order.getId())
+            .orElseThrow(() -> new RuntimeException("Order not found"));
+    assertTrue(savedOrder.getOrderItemList().contains(orderItem));
   }
 }

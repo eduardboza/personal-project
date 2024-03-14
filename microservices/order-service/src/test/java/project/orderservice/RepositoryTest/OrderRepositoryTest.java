@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashSet;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -203,5 +204,31 @@ The test is successful because the Order entity has its FK properly set, because
             .findById(order.getId())
             .orElseThrow(() -> new RuntimeException("Order not found"));
     assertTrue(savedOrder.getOrderItemList().contains(orderItem));
+  }
+
+  /* tests for @Builder.Default on a field. I do not use it, I wanted to see how it works
+   @Column(name = "name")
+   @Builder.Default
+  private String name = "foo";
+  *
+  */
+
+  // test is commented because I do not use @Builder.Default
+  //  @Test
+  //  public void givenBuilderWithDefaultValue_ThanDefaultValueIsPresent() {
+  //    Product build = Product.builder().build();
+  //    Assertions.assertEquals("foo", build.getName());
+  //  }
+  @Test
+  public void givenBuilderWithoutDefaultValue_ThanSetValueIsNotPresent() {
+    Product build = Product.builder().build();
+    assertNull(build.getName());
+  }
+
+  // default builder usage
+  @Test
+  public void givenBuilderWithoutDefaultValue_AndSetValueInBuildingProcess_ThanSetValueIsPresent() {
+    Product build = Product.builder().name("foo").build();
+    Assertions.assertEquals("foo", build.getName());
   }
 }

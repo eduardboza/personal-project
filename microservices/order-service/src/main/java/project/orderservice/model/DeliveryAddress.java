@@ -40,6 +40,8 @@ public class DeliveryAddress {
       fetch = FetchType.LAZY,
       orphanRemoval = true,
       cascade = CascadeType.PERSIST)
+  @EqualsAndHashCode.Exclude
+  @ToString.Exclude
   private List<Order> orderList = new ArrayList<>();
 
   public void addOrder(Order order) {

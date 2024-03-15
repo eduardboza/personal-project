@@ -22,8 +22,6 @@ public class Order {
 
   @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
   @JoinColumn(name = "delivery_address_id")
-  @EqualsAndHashCode.Exclude
-  @ToString.Exclude
   private DeliveryAddress deliveryAddress;
 
   @OneToMany(
@@ -31,6 +29,8 @@ public class Order {
       fetch = FetchType.LAZY,
       orphanRemoval = true,
       cascade = CascadeType.PERSIST)
+  @EqualsAndHashCode.Exclude
+  @ToString.Exclude
   private Set<OrderItem> orderItemList = new HashSet<>();
 
   public void addOrderItem(OrderItem orderItem) {

@@ -32,6 +32,8 @@ public class Product {
       fetch = FetchType.LAZY,
       orphanRemoval = true,
       cascade = CascadeType.PERSIST)
+  @EqualsAndHashCode.Exclude
+  @ToString.Exclude
   private List<OrderItem> orderItemList = new ArrayList<>();
 
   public void addOrderItem(OrderItem orderItem) {

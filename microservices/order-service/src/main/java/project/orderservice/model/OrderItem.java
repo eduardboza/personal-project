@@ -23,13 +23,9 @@ public class OrderItem {
 
   @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
   @JoinColumn(name = "order_id")
-  @EqualsAndHashCode.Exclude
-  @ToString.Exclude
   private Order order;
 
   @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
   @JoinColumn(name = "product_id")
-  @EqualsAndHashCode.Exclude
-  @ToString.Exclude
   private Product product;
 }

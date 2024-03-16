@@ -2,8 +2,6 @@ package project.orderservice.model;
 
 import jakarta.persistence.*;
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.List;
 import lombok.*;
 
 @Entity
@@ -26,23 +24,4 @@ public class Product {
 
   @Column(name = "price")
   private BigDecimal price;
-
-  @OneToMany(
-      mappedBy = "product",
-      fetch = FetchType.LAZY,
-      orphanRemoval = true,
-      cascade = CascadeType.PERSIST)
-  @EqualsAndHashCode.Exclude
-  @ToString.Exclude
-  private List<OrderItem> orderItemList = new ArrayList<>();
-
-  public void addOrderItem(OrderItem orderItem) {
-    orderItemList.add(orderItem);
-    orderItem.setProduct(this);
-  }
-
-  public void removeOrderItem(OrderItem orderItem) {
-    getOrderItemList().remove(orderItem);
-    orderItem.setProduct(null);
-  }
 }

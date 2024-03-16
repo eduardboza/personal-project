@@ -35,11 +35,7 @@ public class DeliveryAddress {
   @Column(name = "postal_code")
   private String postalCode;
 
-  @OneToMany(
-      mappedBy = "deliveryAddress",
-      fetch = FetchType.LAZY,
-      orphanRemoval = true,
-      cascade = CascadeType.PERSIST)
+  @OneToMany(mappedBy = "deliveryAddress", fetch = FetchType.LAZY, orphanRemoval = true)
   @EqualsAndHashCode.Exclude
   @ToString.Exclude
   private List<Order> orderList = new ArrayList<>();

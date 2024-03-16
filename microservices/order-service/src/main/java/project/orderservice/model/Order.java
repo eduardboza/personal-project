@@ -1,6 +1,7 @@
 package project.orderservice.model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import java.util.HashSet;
 import java.util.Set;
 import lombok.*;
@@ -22,13 +23,14 @@ public class Order {
 
   @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
   @JoinColumn(name = "delivery_address_id")
+  @NotNull
   private DeliveryAddress deliveryAddress;
 
   @OneToMany(
       mappedBy = "order",
       fetch = FetchType.LAZY,
       orphanRemoval = true,
-      cascade = CascadeType.PERSIST)
+      cascade = CascadeType.REMOVE)
   @EqualsAndHashCode.Exclude
   @ToString.Exclude
   private Set<OrderItem> orderItemList = new HashSet<>();

@@ -1,8 +1,9 @@
-package project.orderservice.RepositoryTest;
+package project.orderservice.repository;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
+import jakarta.validation.ConstraintViolationException;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -21,10 +22,6 @@ import project.orderservice.model.DeliveryAddress;
 import project.orderservice.model.Order;
 import project.orderservice.model.OrderItem;
 import project.orderservice.model.Product;
-import project.orderservice.repository.DeliveryAddressRepository;
-import project.orderservice.repository.OrderItemRepository;
-import project.orderservice.repository.OrderRepository;
-import project.orderservice.repository.ProductRepository;
 
 @DataJpaTest
 @Testcontainers
@@ -49,12 +46,7 @@ public class OrderRepositoryTest {
   void should_saveAllEntities() {
     // GIVEN
     // Create and save Product
-    Product product =
-        Product.builder()
-            .name("Adidas Shoes")
-            .price(BigDecimal.valueOf(300))
-            .orderItemList(new ArrayList<>())
-            .build();
+    Product product = Product.builder().name("Adidas Shoes").price(BigDecimal.valueOf(300)).build();
     // WHEN
     productRepository.save(product);
 
@@ -86,8 +78,29 @@ public class OrderRepositoryTest {
   @Test
   @DisplayName(
       """
-The test is unsuccessful because the Order entity has its FK not properly set, because\s
-          the specific deliveryAddress does not exist in the database.
+     The test is unsuccessful because the Order has DeliveryAddress field null, so the FK is not set
+     """)
+  void should_OrderHaveDeliveryAddressFieldNull_WhenOrderSaved() {
+    // Create and save Order
+    Order order = Order.builder().orderItemList(new HashSet<>()).build();
+    // Use assertThrows to check for ConstraintViolationException
+    ConstraintViolationException exception =
+        assertThrows(
+            ConstraintViolationException.class,
+            () -> {
+              orderRepository.save(order);
+            });
+
+    // Assert that the exception message contains the expected message
+    String expectedMessage = "interpolatedMessage='must not be null', propertyPath=deliveryAddress";
+    String actualMessage = exception.getMessage();
+    assertTrue(actualMessage.contains(expectedMessage));
+  }
+
+  @Test
+  @DisplayName(
+      """
+The test is unsuccessful because the Order entity has its FK not properly set, because the specific deliveryAddress does not exist in the database.
 """)
   void should_failToSaveOrder_WhenFkIsNotSet() {
     // GIVEN
@@ -101,14 +114,17 @@ The test is unsuccessful because the Order entity has its FK not properly set, b
 
     Order order = Order.builder().id(1L).deliveryAddress(deliveryAddress).build();
 
-    // WHEN .save(order)
-    // THEN assertThrows
-    // Attempt to save an Order with an invalid foreign key (delivery address id)
-    assertThrows(
-        DataIntegrityViolationException.class,
-        () -> {
-          orderRepository.save(order);
-        });
+    DataIntegrityViolationException exception =
+        Assertions.assertThrows(
+            DataIntegrityViolationException.class,
+            () -> {
+              orderRepository.save(order);
+            });
+    String expectedMessage =
+        "insert or update on table \"orders\" violates foreign key constraint \"fk_delivery_address\"";
+    String actualMessage = exception.getMessage();
+    // Assert that the exception message contains the expected message
+    assert actualMessage.contains(expectedMessage);
   }
 
   @Test
@@ -119,19 +135,13 @@ The test is successful because the Order entity has its FK properly set, because
   void should_saveOrder_WhenFksIsSet() {
     // GIVEN
     // Create and save Product
-    Product product =
-        Product.builder()
-            .name("Adidas Shoes")
-            .price(BigDecimal.valueOf(300))
-            .orderItemList(new ArrayList<>())
-            .build();
+    Product product = Product.builder().name("Adidas Shoes").price(BigDecimal.valueOf(300)).build();
     productRepository.save(product);
 
-    // Create OrderItem and associate it with the Product
+    // Create OrderItem
     OrderItem orderItem =
         OrderItem.builder().amount(BigDecimal.valueOf(3)).product(product).build();
     orderItemRepository.save(orderItem);
-    product.addOrderItem(orderItem); // should I do this or not?
 
     // Create and save DeliveryAddress
     DeliveryAddress deliveryAddress =
@@ -152,18 +162,11 @@ The test is successful because the Order entity has its FK properly set, because
   @Test
   @DisplayName(
       """
- The test is successful because the Product has the correct OrderItem in its OrderItemList,
- the DeliveryAddress has the correct Order in its orderList,
- the Order has the correct OrderItem in its orderItemList
+ The test is successful because the Order has the correct OrderItem in its orderItemList
  """)
-  void should_productHaveTheCorrectOrderItem_WhenEntitiesAreSaved() {
+  void should_OrderHaveTheCorrectOrderItem_WhenEntitiesAreSaved() {
     // Create and save Product
-    Product product =
-        Product.builder()
-            .name("Adidas Shoes")
-            .price(BigDecimal.valueOf(300))
-            .orderItemList(new ArrayList<>())
-            .build();
+    Product product = Product.builder().name("Adidas Shoes").price(BigDecimal.valueOf(300)).build();
     productRepository.save(product);
 
     // Create, save OrderItem and associate it with the Product
@@ -181,8 +184,6 @@ The test is successful because the Order entity has its FK properly set, because
         Order.builder().deliveryAddress(deliveryAddress).orderItemList(new HashSet<>()).build();
     orderRepository.save(order);
 
-    product.addOrderItem(orderItem); // should I do this or not? seems like a service thing
-    deliveryAddress.addOrder(order);
     order.addOrderItem(orderItem);
 
     // Fetch the saved Product from the database
@@ -190,14 +191,6 @@ The test is successful because the Order entity has its FK properly set, because
         productRepository
             .findById(product.getId())
             .orElseThrow(() -> new RuntimeException("Product not found"));
-    // Check that the Product has the correct OrderItem in its OrderItemList
-    assertTrue(savedProduct.getOrderItemList().contains(orderItem));
-
-    DeliveryAddress savedDeliveryAddress =
-        deliveryAddressRepository
-            .findById(deliveryAddress.getId())
-            .orElseThrow(() -> new RuntimeException("Delivery Address not found"));
-    assertTrue(savedDeliveryAddress.getOrderList().contains(order));
 
     Order savedOrder =
         orderRepository

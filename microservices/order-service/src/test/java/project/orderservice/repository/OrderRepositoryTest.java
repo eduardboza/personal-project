@@ -32,7 +32,7 @@ The test is successful because Order entity has all mandatory fields filled in
         Order.builder().deliveryAddress(deliveryAddress).orderItemList(new HashSet<>()).build();
 
     Order saveOrder = orderRepository.save(order);
-    assertNotNull(order.getId());
+    assertNotNull(saveOrder.getId());
   }
 
   @Test
@@ -45,11 +45,7 @@ The test is unsuccessful because Order entity has not all mandatory fields fille
     Order order = Order.builder().build();
     // Use assertThrows to check for ConstraintViolationException
     ConstraintViolationException exception =
-        assertThrows(
-            ConstraintViolationException.class,
-            () ->
-              orderRepository.save(order)
-            );
+        assertThrows(ConstraintViolationException.class, () -> orderRepository.save(order));
 
     // Assert that the exception message contains the expected message
     String expectedMessage = "interpolatedMessage='must not be null', propertyPath=deliveryAddress";
@@ -71,8 +67,7 @@ The test is successful because Order has the correct DeliveryAddress saved in db
     Order order =
         Order.builder().deliveryAddress(deliveryAddress).orderItemList(new HashSet<>()).build();
 
-    Order saveOrder = orderRepository.save(order);
-
+    orderRepository.save(order);
     deliveryAddress.addOrder(order);
 
     DeliveryAddress savedDeliveryAddress =
@@ -123,11 +118,7 @@ The test is successful because Order has the correct DeliveryAddress saved in db
     Order order = Order.builder().orderItemList(new HashSet<>()).build();
     // Use assertThrows to check for ConstraintViolationException
     ConstraintViolationException exception =
-        assertThrows(
-            ConstraintViolationException.class,
-            () ->
-              orderRepository.save(order)
-            );
+        assertThrows(ConstraintViolationException.class, () -> orderRepository.save(order));
 
     // Assert that the exception message contains the expected message
     String expectedMessage = "interpolatedMessage='must not be null', propertyPath=deliveryAddress";

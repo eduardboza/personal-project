@@ -33,6 +33,7 @@ public class Order {
       cascade = CascadeType.REMOVE)
   @EqualsAndHashCode.Exclude
   @ToString.Exclude
+  @NotNull
   private Set<OrderItem> orderItemList = new HashSet<>();
 
   public void addOrderItem(OrderItem orderItem) {

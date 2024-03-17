@@ -1,6 +1,7 @@
 package project.orderservice.model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import java.math.BigDecimal;
 import lombok.*;
 
@@ -27,5 +28,6 @@ public class OrderItem {
 
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "product_id")
+  @NotNull
   private Product product;
 }

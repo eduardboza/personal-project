@@ -1,6 +1,5 @@
 package project.orderservice.repository;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
 import jakarta.validation.ConstraintViolationException;
@@ -10,69 +9,108 @@ import java.util.HashSet;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
-import org.springframework.dao.DataIntegrityViolationException;
-import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
 import project.orderservice.model.DeliveryAddress;
 import project.orderservice.model.Order;
 import project.orderservice.model.OrderItem;
 import project.orderservice.model.Product;
 
 @DataJpaTest
-@Testcontainers
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-public class OrderRepositoryTest {
-  @Container @ServiceConnection
-  static PostgreSQLContainer<?> postgreSQLContainer = new PostgreSQLContainer<>("postgres:latest");
-
-  @Autowired private OrderRepository orderRepository;
-  @Autowired private OrderItemRepository orderItemRepository;
-  @Autowired private ProductRepository productRepository;
-  @Autowired private DeliveryAddressRepository deliveryAddressRepository;
-
+public class OrderRepositoryTest extends BaseRepositoryTest {
   @Test
-  void connectionEstablished() {
-    assertThat(postgreSQLContainer.isCreated()).isTrue();
-    assertThat(postgreSQLContainer.isRunning()).isTrue();
+  @DisplayName(
+      """
+The test is successful because Order entity has all mandatory fields filled in
+""")
+  void should_saveOrder() {
+    DeliveryAddress deliveryAddress =
+        DeliveryAddress.builder().street("Armeana 1").orderList(new ArrayList<>()).build();
+
+    Order order =
+        Order.builder().deliveryAddress(deliveryAddress).orderItemList(new HashSet<>()).build();
+
+    Order saveOrder = orderRepository.save(order);
+    assertNotNull(order.getId());
   }
 
   @Test
-  @DisplayName("The test is successful because all entities can be saved")
-  void should_saveAllEntities() {
-    // GIVEN
-    // Create and save Product
-    Product product = Product.builder().name("Adidas Shoes").price(BigDecimal.valueOf(300)).build();
-    // WHEN
-    productRepository.save(product);
+  @DisplayName(
+      """
+The test is unsuccessful because Order entity has not all mandatory fields filled in
+""")
+  void should_notSaveOrder_becauseMandatoryFieldsAreNotFilledIn() {
+    // Create and save Order
+    Order order = Order.builder().build();
+    // Use assertThrows to check for ConstraintViolationException
+    ConstraintViolationException exception =
+        assertThrows(
+            ConstraintViolationException.class,
+            () ->
+              orderRepository.save(order)
+            );
 
-    // Create OrderItem and associate it with the Product
+    // Assert that the exception message contains the expected message
+    String expectedMessage = "interpolatedMessage='must not be null', propertyPath=deliveryAddress";
+    String expectedMessage2 = "interpolatedMessage='must not be null', propertyPath=orderItemList";
+    String actualMessage = exception.getMessage();
+    assertTrue(actualMessage.contains(expectedMessage));
+    assertTrue(actualMessage.contains(expectedMessage2));
+  }
+
+  @Test
+  @DisplayName(
+      """
+The test is successful because Order has the correct DeliveryAddress saved in db and is successfully associated with
+""")
+  void should_orderHaveCorrectDeliveryAddress_whenSaveOrderAndDeliveryAddressAtTheSameTime() {
+    DeliveryAddress deliveryAddress =
+        DeliveryAddress.builder().street("Armeana 1").orderList(new ArrayList<>()).build();
+
+    Order order =
+        Order.builder().deliveryAddress(deliveryAddress).orderItemList(new HashSet<>()).build();
+
+    Order saveOrder = orderRepository.save(order);
+
+    deliveryAddress.addOrder(order);
+
+    DeliveryAddress savedDeliveryAddress =
+        deliveryAddressRepository
+            .findById(deliveryAddress.getId())
+            .orElseThrow(() -> new RuntimeException("DeliveryAddress not found"));
+    assertTrue(savedDeliveryAddress.getOrderList().contains(order));
+  }
+
+  @Test
+  @DisplayName(
+      """
+     The test is successful because the Order has the correct OrderItem in its orderItemList
+     """)
+  void should_OrderHaveTheCorrectOrderItem_WhenEntitiesAreSaved() {
+    Product product = Product.builder().name("Adidas 13").price(BigDecimal.valueOf(300.3D)).build();
+    productRepository.save(product);
+    // Create, save OrderItem
     OrderItem orderItem =
-        OrderItem.builder().amount(BigDecimal.valueOf(3)).product(product).build();
-    // WHEN
+        OrderItem.builder().product(product).amount(BigDecimal.valueOf(3)).build();
     orderItemRepository.save(orderItem);
 
     // Create and save DeliveryAddress
     DeliveryAddress deliveryAddress =
         DeliveryAddress.builder().street("Armeana 1").orderList(new ArrayList<>()).build();
-    // WHEN
-    deliveryAddressRepository.save(deliveryAddress);
 
     // Create and save Order, associating it with DeliveryAddress
     Order order =
         Order.builder().deliveryAddress(deliveryAddress).orderItemList(new HashSet<>()).build();
-    // WHEN
     orderRepository.save(order);
 
-    // THEN
-    assertNotNull(product.getId());
-    assertNotNull(orderItem.getId());
-    assertNotNull(deliveryAddress.getId());
-    assertNotNull(order.getId());
+    order.addOrderItem(orderItem);
+
+    Order savedOrder =
+        orderRepository
+            .findById(order.getId())
+            .orElseThrow(() -> new RuntimeException("Order not found"));
+    assertTrue(savedOrder.getOrderItemList().contains(orderItem));
   }
 
   @Test
@@ -87,9 +125,9 @@ public class OrderRepositoryTest {
     ConstraintViolationException exception =
         assertThrows(
             ConstraintViolationException.class,
-            () -> {
-              orderRepository.save(order);
-            });
+            () ->
+              orderRepository.save(order)
+            );
 
     // Assert that the exception message contains the expected message
     String expectedMessage = "interpolatedMessage='must not be null', propertyPath=deliveryAddress";
@@ -100,54 +138,13 @@ public class OrderRepositoryTest {
   @Test
   @DisplayName(
       """
-The test is unsuccessful because the Order entity has its FK not properly set, because the specific deliveryAddress does not exist in the database.
-""")
-  void should_failToSaveOrder_WhenFkIsNotSet() {
-    // GIVEN
-    Product product =
-        Product.builder().id(1L).name("Adidas Shoes").price(BigDecimal.valueOf(300)).build();
-
-    DeliveryAddress deliveryAddress = DeliveryAddress.builder().id(1L).street("Armeana 1").build();
-
-    OrderItem orderItem =
-        OrderItem.builder().id(1L).amount(BigDecimal.valueOf(3)).product(product).build();
-
-    Order order = Order.builder().id(1L).deliveryAddress(deliveryAddress).build();
-
-    DataIntegrityViolationException exception =
-        Assertions.assertThrows(
-            DataIntegrityViolationException.class,
-            () -> {
-              orderRepository.save(order);
-            });
-    String expectedMessage =
-        "insert or update on table \"orders\" violates foreign key constraint \"fk_delivery_address\"";
-    String actualMessage = exception.getMessage();
-    // Assert that the exception message contains the expected message
-    assert actualMessage.contains(expectedMessage);
-  }
-
-  @Test
-  @DisplayName(
-      """
-The test is successful because the Order entity has its FK properly set, because deliveryAddress exists in the database.
+The test is successful because the Order entity has its FK properly set, because deliveryAddress already exists in the database.
 """)
   void should_saveOrder_WhenFksIsSet() {
-    // GIVEN
-    // Create and save Product
-    Product product = Product.builder().name("Adidas Shoes").price(BigDecimal.valueOf(300)).build();
-    productRepository.save(product);
-
-    // Create OrderItem
-    OrderItem orderItem =
-        OrderItem.builder().amount(BigDecimal.valueOf(3)).product(product).build();
-    orderItemRepository.save(orderItem);
-
     // Create and save DeliveryAddress
     DeliveryAddress deliveryAddress =
         DeliveryAddress.builder().street("Armeana 1").orderList(new ArrayList<>()).build();
     deliveryAddressRepository.save(deliveryAddress);
-
     // Create and save Order, associating it with DeliveryAddress
     Order order =
         Order.builder().deliveryAddress(deliveryAddress).orderItemList(new HashSet<>()).build();
@@ -157,46 +154,6 @@ The test is successful because the Order entity has its FK properly set, because
 
     // THEN
     assertNotNull(order.getId());
-  }
-
-  @Test
-  @DisplayName(
-      """
- The test is successful because the Order has the correct OrderItem in its orderItemList
- """)
-  void should_OrderHaveTheCorrectOrderItem_WhenEntitiesAreSaved() {
-    // Create and save Product
-    Product product = Product.builder().name("Adidas Shoes").price(BigDecimal.valueOf(300)).build();
-    productRepository.save(product);
-
-    // Create, save OrderItem and associate it with the Product
-    OrderItem orderItem =
-        OrderItem.builder().amount(BigDecimal.valueOf(3)).product(product).build();
-    orderItemRepository.save(orderItem);
-
-    // Create and save DeliveryAddress
-    DeliveryAddress deliveryAddress =
-        DeliveryAddress.builder().street("Armeana 1").orderList(new ArrayList<>()).build();
-    deliveryAddressRepository.save(deliveryAddress);
-
-    // Create and save Order, associating it with DeliveryAddress
-    Order order =
-        Order.builder().deliveryAddress(deliveryAddress).orderItemList(new HashSet<>()).build();
-    orderRepository.save(order);
-
-    order.addOrderItem(orderItem);
-
-    // Fetch the saved Product from the database
-    Product savedProduct =
-        productRepository
-            .findById(product.getId())
-            .orElseThrow(() -> new RuntimeException("Product not found"));
-
-    Order savedOrder =
-        orderRepository
-            .findById(order.getId())
-            .orElseThrow(() -> new RuntimeException("Order not found"));
-    assertTrue(savedOrder.getOrderItemList().contains(orderItem));
   }
 
   /* tests for @Builder.Default on a field. I do not use it, I wanted to see how it works

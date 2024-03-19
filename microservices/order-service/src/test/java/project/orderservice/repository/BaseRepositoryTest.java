@@ -10,6 +10,10 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 
 @Testcontainers
 public abstract class BaseRepositoryTest {
+  @Autowired protected OrderRepository orderRepository;
+  @Autowired protected OrderItemRepository orderItemRepository;
+  @Autowired protected ProductRepository productRepository;
+  @Autowired protected DeliveryAddressRepository deliveryAddressRepository;
 
   @Container
   static PostgreSQLContainer<?> postgreSQLContainer = new PostgreSQLContainer<>("postgres:latest");
@@ -19,9 +23,4 @@ public abstract class BaseRepositoryTest {
     assertThat(postgreSQLContainer.isCreated()).isTrue();
     assertThat(postgreSQLContainer.isRunning()).isTrue();
   }
-
-  @Autowired protected OrderRepository orderRepository;
-  @Autowired protected OrderItemRepository orderItemRepository;
-  @Autowired protected ProductRepository productRepository;
-  @Autowired protected DeliveryAddressRepository deliveryAddressRepository;
 }

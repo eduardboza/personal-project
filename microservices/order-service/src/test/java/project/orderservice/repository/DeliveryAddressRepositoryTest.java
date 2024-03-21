@@ -3,6 +3,7 @@ package project.orderservice.repository;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -12,6 +13,8 @@ import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabas
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import project.orderservice.model.DeliveryAddress;
 import project.orderservice.model.Order;
+import project.orderservice.model.OrderItem;
+import project.orderservice.model.Product;
 
 @DataJpaTest()
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
@@ -39,8 +42,6 @@ public class DeliveryAddressRepositoryTest extends BaseRepositoryTest {
 
     Order savedOrder = orderRepository.save(order);
     assertTrue(deliveryAddress.getOrderList().contains(savedOrder));
-
-    List<Order> orders = orderRepository.findAll();
 
     DeliveryAddress findByIdDeliveryAddress =
         deliveryAddressRepository
@@ -72,25 +73,33 @@ public class DeliveryAddressRepositoryTest extends BaseRepositoryTest {
     deliveryAddressRepository.saveAll(deliveryAddressList);
     List<DeliveryAddress> addressesReceived = deliveryAddressRepository.findAll();
     assertThat(addressesReceived).hasSize(2);
-
-    DeliveryAddress savedDeliveryAddress =
-        deliveryAddressRepository
-            .findById(1L)
-            .orElseThrow(() -> new RuntimeException("Delivery Address not found"));
   }
 
   @Test
   @DisplayName(
       """
-    The test is successful because DeliveryAddress is deleted and the Order associated to it is deleted
-   because we have just 1 order associated to this delivery address and have orphanRemoval = true on orderList and Order is not associated with other entities
-   """)
-  void should_deleteDeliveryAddress_andDeleteOrder_whenDeliveryAddressIsAssociatedWithOrder() {
+        The test is successful because DeliveryAddress is deleted and the Order associated to it is deleted
+       and also the OrderItem associated to the Order is deleted because we have orphanRemoval = true
+       """)
+  void
+      should_deleteDeliveryAddress_andOrder_andOrderItem_whenDeliveryAddressIsAssociatedWithOrder() {
+    Product product = Product.builder().name("Adidas13").price(BigDecimal.valueOf(300.3D)).build();
+
+    OrderItem orderItem =
+        OrderItem.builder().product(product).amount(BigDecimal.valueOf(3)).build();
+
     DeliveryAddress deliveryAddress =
         DeliveryAddress.builder().street("Armeana 1").orderList(new ArrayList<>()).build();
-    Order order =
-        Order.builder().deliveryAddress(deliveryAddress).orderItemList(new HashSet<>()).build();
+
+    Order order = Order.builder().orderItemList(new HashSet<>()).build();
     deliveryAddress.addOrder(order);
+    order.setDeliveryAddress(deliveryAddress);
+
+    order.addOrderItem(orderItem);
+    orderItem.setOrder(order);
+
+    productRepository.save(product);
+    orderItemRepository.save(orderItem);
     orderRepository.save(order);
 
     // Assert that the Order and DeliveryAddress are saved
@@ -103,11 +112,8 @@ public class DeliveryAddressRepositoryTest extends BaseRepositoryTest {
     // Assert that the DeliveryAddress is deleted
     assertFalse(deliveryAddressRepository.existsById(deliveryAddress.getId()));
 
-    // Assert that the Order is deleted because we have just 1 order associated to this delivery
-    // address and have orphanRemoval = true on orderList
-    // The orphanRemoval = true attribute ensures that if an Order entity is removed from the
-    // orderList, it will also be deleted from the database if it's not associated with any other
-    // DeliveryAddress.
+    // Assert that the Order and OrderItem are deleted
     assertFalse(orderRepository.existsById(order.getId()));
+    assertFalse(orderItemRepository.existsById(orderItem.getId()));
   }
 }

@@ -147,6 +147,59 @@ The test is successful because the Order entity has its FK properly set, because
     assertNotNull(order.getId());
   }
 
+  @Test
+  @DisplayName(
+      """
+          The test is successful because we have List<Order> with multiple elements and want to delete just order1
+          """)
+  void should_deleteOrder1_whenMultipleElementsAreInTheList() {
+    Product product = Product.builder().name("Adidas13").price(BigDecimal.valueOf(300.3D)).build();
+
+    OrderItem orderItem1 =
+        OrderItem.builder().product(product).amount(BigDecimal.valueOf(1)).build();
+
+    OrderItem orderItem2 =
+        OrderItem.builder().product(product).amount(BigDecimal.valueOf(2)).build();
+
+    DeliveryAddress deliveryAddress =
+        DeliveryAddress.builder().street("Armeana 1").orderList(new ArrayList<>()).build();
+
+    Order order1 = Order.builder().orderItemList(new HashSet<>()).build();
+    deliveryAddress.addOrder(order1);
+    order1.setDeliveryAddress(deliveryAddress);
+    order1.addOrderItem(orderItem1);
+    orderItem1.setOrder(order1);
+
+    Order order2 = Order.builder().orderItemList(new HashSet<>()).build();
+    deliveryAddress.addOrder(order2);
+    order2.setDeliveryAddress(deliveryAddress);
+    order2.addOrderItem(orderItem2);
+    orderItem2.setOrder(order2);
+
+    productRepository.save(product);
+    orderItemRepository.save(orderItem1);
+    orderItemRepository.save(orderItem2);
+    orderRepository.save(order1);
+    orderRepository.save(order2);
+
+    // Assert that the Orders and DeliveryAddress are saved
+    assertTrue(orderRepository.existsById(order1.getId()));
+    assertTrue(orderRepository.existsById(order2.getId()));
+    assertTrue(deliveryAddressRepository.existsById(deliveryAddress.getId()));
+
+    // Delete order1
+    orderRepository.deleteById(order1.getId());
+
+    // Assert that the order1 and orderItem1 are deleted. OrderItem1 is deleted because or
+    // orphanRemoval = true because of orphanRemoval=true on orderItemList in Order entity
+    assertFalse(orderRepository.existsById(order1.getId()));
+    assertFalse(orderItemRepository.existsById(orderItem1.getId()));
+
+    // Assert that the order2 and orderItem2 exists
+    assertTrue(orderRepository.existsById(order2.getId()));
+    assertTrue(orderItemRepository.existsById(orderItem2.getId()));
+  }
+
   /* tests for @Builder.Default on a field. I do not use it, I wanted to see how it works
    @Column(name = "name")
    @Builder.Default

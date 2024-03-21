@@ -6,6 +6,7 @@ import jakarta.validation.ConstraintViolationException;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -188,7 +189,14 @@ The test is successful because the Order entity has its FK properly set, because
     assertTrue(deliveryAddressRepository.existsById(deliveryAddress.getId()));
 
     // Delete order1
-    orderRepository.deleteById(order1.getId());
+    try {
+      orderRepository.deleteById(order1.getId());
+    } catch (Exception e) {
+      fail("Failed to delete order1: " + e.getMessage());
+    }
+    // Remove order1 from deliveryAddress
+    deliveryAddress.removeOrder(order1);
+    List<DeliveryAddress> updatedDeliveryAddresses = deliveryAddressRepository.findAll();
 
     // Assert that the order1 and orderItem1 are deleted. OrderItem1 is deleted because or
     // orphanRemoval = true because of orphanRemoval=true on orderItemList in Order entity

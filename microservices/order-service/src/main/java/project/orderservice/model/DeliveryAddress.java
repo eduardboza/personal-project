@@ -1,26 +1,18 @@
 package project.orderservice.model;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import java.util.ArrayList;
 import java.util.List;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @Entity
 @Table(name = "delivery_address")
-@NoArgsConstructor
+@Getter
+@Setter
+@ToString
 @AllArgsConstructor
+@NoArgsConstructor
 @Builder
-@Data
 public class DeliveryAddress {
 
   @Id
@@ -44,6 +36,8 @@ public class DeliveryAddress {
   private String postalCode;
 
   @OneToMany(mappedBy = "deliveryAddress", fetch = FetchType.LAZY, orphanRemoval = true)
+  @EqualsAndHashCode.Exclude
+  @ToString.Exclude
   private List<Order> orderList = new ArrayList<>();
 
   public void addOrder(Order order) {
@@ -56,10 +50,3 @@ public class DeliveryAddress {
     order.setDeliveryAddress(null);
   }
 }
-// de facut alt branch pe care fac modificarile si dupa ce e ceva gata fac PR si ii dau lui Daniel
-// de pus @Column la tot
-// de folosit formatter
-// de vazut care i treaba cu GenerationType.SEQUENCE si sa vad daca inserez in scripturile de
-// flyway. Faza e sa am un sequence. sa vad daca se formeaza automat cu GenerationType.IDENTITY
-// de facut relatie ONE Product   TO   MANY OrderItems
-// de facut teste pe repository. TDD. mockito, junit5, hamcast?  faker?

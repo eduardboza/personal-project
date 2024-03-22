@@ -65,7 +65,7 @@ public class DeliveryAddressRepositoryTest extends BaseRepositoryTest {
   }
 
   @Test
-  void shouldGetAllDeliveryAddresses() {
+  void should_getAllDeliveryAddresses() {
     List<DeliveryAddress> deliveryAddressList =
         List.of(
             DeliveryAddress.builder().street("Armeana 100").build(),
@@ -73,6 +73,31 @@ public class DeliveryAddressRepositoryTest extends BaseRepositoryTest {
     deliveryAddressRepository.saveAll(deliveryAddressList);
     List<DeliveryAddress> addressesReceived = deliveryAddressRepository.findAll();
     assertThat(addressesReceived).hasSize(2);
+  }
+
+  @Test
+  void should_updateDeliveryAddress() {
+    DeliveryAddress deliveryAddress =
+        DeliveryAddress.builder()
+            .street("Street")
+            .city("City")
+            .state("State")
+            .country("Country")
+            .postalCode("12345")
+            .build();
+
+    // update
+    deliveryAddress.setCity("New York");
+    // save the updated object
+    deliveryAddressRepository.save(deliveryAddress);
+
+    DeliveryAddress updatedDeliveryAddress =
+        deliveryAddressRepository
+            .findById(deliveryAddress.getId())
+            .orElseThrow(() -> new RuntimeException("DeliveryAddress not found."));
+
+    assertNotNull(updatedDeliveryAddress);
+    assertEquals("New York", updatedDeliveryAddress.getCity());
   }
 
   @Test

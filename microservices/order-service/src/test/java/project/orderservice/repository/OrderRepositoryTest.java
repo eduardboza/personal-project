@@ -26,12 +26,16 @@ public class OrderRepositoryTest extends BaseRepositoryTest {
 The test is successful because Order entity has all mandatory fields filled in
 """)
   void should_saveOrder() {
+    Product product = Product.builder().name("Adidas13").price(BigDecimal.valueOf(300.3D)).build();
+    OrderItem orderItem =
+        OrderItem.builder().product(product).amount(BigDecimal.valueOf(3)).build();
     DeliveryAddress deliveryAddress =
         DeliveryAddress.builder().street("Armeana 1").orderList(new ArrayList<>()).build();
-
     Order order =
         Order.builder().deliveryAddress(deliveryAddress).orderItemList(new HashSet<>()).build();
 
+    order.addOrderItem(orderItem);
+    orderItem.setOrder(order);
     Order saveOrder = orderRepository.save(order);
     assertNotNull(saveOrder.getId());
   }
@@ -42,7 +46,6 @@ The test is successful because Order entity has all mandatory fields filled in
 The test is unsuccessful because Order entity has not all mandatory fields filled in
 """)
   void should_notSaveOrder_becauseMandatoryFieldsAreNotFilledIn() {
-    // Create and save Order
     Order order = Order.builder().build();
     // Use assertThrows to check for ConstraintViolationException
     ConstraintViolationException exception =
@@ -62,12 +65,16 @@ The test is unsuccessful because Order entity has not all mandatory fields fille
 The test is successful because Order has the correct DeliveryAddress saved in db and is successfully associated with
 """)
   void should_orderHaveCorrectDeliveryAddress_whenSaveOrderAndDeliveryAddressAtTheSameTime() {
+    Product product = Product.builder().name("Adidas13").price(BigDecimal.valueOf(300.3D)).build();
+    OrderItem orderItem =
+        OrderItem.builder().product(product).amount(BigDecimal.valueOf(3)).build();
     DeliveryAddress deliveryAddress =
         DeliveryAddress.builder().street("Armeana 1").orderList(new ArrayList<>()).build();
 
     Order order =
         Order.builder().deliveryAddress(deliveryAddress).orderItemList(new HashSet<>()).build();
-
+    order.addOrderItem(orderItem);
+    orderItem.setOrder(order);
     orderRepository.save(order);
     deliveryAddress.addOrder(order);
 
@@ -86,21 +93,17 @@ The test is successful because Order has the correct DeliveryAddress saved in db
   void should_OrderHaveTheCorrectOrderItem_WhenEntitiesAreSaved() {
     Product product = Product.builder().name("Adidas 13").price(BigDecimal.valueOf(300.3D)).build();
     productRepository.save(product);
-    // Create, save OrderItem
     OrderItem orderItem =
         OrderItem.builder().product(product).amount(BigDecimal.valueOf(3)).build();
     orderItemRepository.save(orderItem);
-
-    // Create and save DeliveryAddress
     DeliveryAddress deliveryAddress =
         DeliveryAddress.builder().street("Armeana 1").orderList(new ArrayList<>()).build();
-
-    // Create and save Order, associating it with DeliveryAddress
     Order order =
         Order.builder().deliveryAddress(deliveryAddress).orderItemList(new HashSet<>()).build();
-    orderRepository.save(order);
 
     order.addOrderItem(orderItem);
+    orderItem.setOrder(order);
+    orderRepository.save(order);
 
     Order savedOrder =
         orderRepository
@@ -115,12 +118,10 @@ The test is successful because Order has the correct DeliveryAddress saved in db
      The test is unsuccessful because the Order has DeliveryAddress field null, so the FK is not set
      """)
   void should_OrderHaveDeliveryAddressFieldNull_WhenOrderSaved() {
-    // Create and save Order
     Order order = Order.builder().orderItemList(new HashSet<>()).build();
     // Use assertThrows to check for ConstraintViolationException
     ConstraintViolationException exception =
         assertThrows(ConstraintViolationException.class, () -> orderRepository.save(order));
-
     // Assert that the exception message contains the expected message
     String expectedMessage = "interpolatedMessage='must not be null', propertyPath=deliveryAddress";
     String actualMessage = exception.getMessage();
@@ -133,17 +134,19 @@ The test is successful because Order has the correct DeliveryAddress saved in db
 The test is successful because the Order entity has its FK properly set, because deliveryAddress already exists in the database.
 """)
   void should_saveOrder_WhenFksIsSet() {
-    // Create and save DeliveryAddress
+    Product product = Product.builder().name("Adidas13").price(BigDecimal.valueOf(300.3D)).build();
+    OrderItem orderItem =
+        OrderItem.builder().product(product).amount(BigDecimal.valueOf(3)).build();
     DeliveryAddress deliveryAddress =
         DeliveryAddress.builder().street("Armeana 1").orderList(new ArrayList<>()).build();
     deliveryAddressRepository.save(deliveryAddress);
-    // Create and save Order, associating it with DeliveryAddress
     Order order =
         Order.builder().deliveryAddress(deliveryAddress).orderItemList(new HashSet<>()).build();
 
+    order.addOrderItem(orderItem);
+    orderItem.setOrder(order);
     // WHEN
     orderRepository.save(order);
-
     // THEN
     assertNotNull(order.getId());
   }
@@ -198,8 +201,8 @@ The test is successful because the Order entity has its FK properly set, because
     deliveryAddress.removeOrder(order1);
     List<DeliveryAddress> updatedDeliveryAddresses = deliveryAddressRepository.findAll();
 
-    // Assert that the order1 and orderItem1 are deleted. OrderItem1 is deleted because or
-    // orphanRemoval = true because of orphanRemoval=true on orderItemList in Order entity
+    // Assert that the order1 and orderItem1 are deleted. OrderItem1 is deleted because of
+    // orphanRemoval=true on orderItemList in Order entity
     assertFalse(orderRepository.existsById(order1.getId()));
     assertFalse(orderItemRepository.existsById(orderItem1.getId()));
 

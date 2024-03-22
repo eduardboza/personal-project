@@ -1,6 +1,7 @@
 package project.orderservice.model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import java.util.HashSet;
 import java.util.Set;
@@ -34,6 +35,7 @@ public class Order {
   @EqualsAndHashCode.Exclude
   @ToString.Exclude
   @NotNull
+  @NotEmpty
   private Set<OrderItem> orderItemList = new HashSet<>();
 
   public void addOrderItem(OrderItem orderItem) {

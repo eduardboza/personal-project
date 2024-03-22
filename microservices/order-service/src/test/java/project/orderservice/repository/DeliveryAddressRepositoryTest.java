@@ -35,10 +35,14 @@ public class DeliveryAddressRepositoryTest extends BaseRepositoryTest {
             .postalCode("XYZ")
             .orderList(new ArrayList<>())
             .build();
-
+    Product product = Product.builder().name("Adidas13").price(BigDecimal.valueOf(300.3D)).build();
+    OrderItem orderItem =
+        OrderItem.builder().product(product).amount(BigDecimal.valueOf(3)).build();
     Order order =
         Order.builder().deliveryAddress(deliveryAddress).orderItemList(new HashSet<>()).build();
     deliveryAddress.addOrder(order);
+    order.addOrderItem(orderItem);
+    orderItem.setOrder(order);
 
     Order savedOrder = orderRepository.save(order);
     assertTrue(deliveryAddress.getOrderList().contains(savedOrder));

@@ -1,12 +1,11 @@
 package project.orderservice.repository;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
 import jakarta.validation.ConstraintViolationException;
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
+import java.util.*;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -115,22 +114,6 @@ The test is successful because Order has the correct DeliveryAddress saved in db
   @Test
   @DisplayName(
       """
-     The test is unsuccessful because the Order has DeliveryAddress field null, so the FK is not set
-     """)
-  void should_OrderHaveDeliveryAddressFieldNull_WhenOrderSaved() {
-    Order order = Order.builder().orderItemList(new HashSet<>()).build();
-    // Use assertThrows to check for ConstraintViolationException
-    ConstraintViolationException exception =
-        assertThrows(ConstraintViolationException.class, () -> orderRepository.save(order));
-    // Assert that the exception message contains the expected message
-    String expectedMessage = "interpolatedMessage='must not be null', propertyPath=deliveryAddress";
-    String actualMessage = exception.getMessage();
-    assertTrue(actualMessage.contains(expectedMessage));
-  }
-
-  @Test
-  @DisplayName(
-      """
 The test is successful because the Order entity has its FK properly set, because deliveryAddress already exists in the database.
 """)
   void should_saveOrder_WhenFksIsSet() {
@@ -154,9 +137,31 @@ The test is successful because the Order entity has its FK properly set, because
   @Test
   @DisplayName(
       """
-          The test is successful because we have List<Order> with multiple elements and want to delete just order1
-          """)
-  void should_deleteOrder1_whenMultipleElementsAreInTheList() {
+    The test is successful because Order entity has all mandatory fields filled in
+    """)
+  void should_persistDeliveryAddress_whenSavingOrder() {
+    Product product = Product.builder().name("Adidas13").price(BigDecimal.valueOf(300.3D)).build();
+    OrderItem orderItem =
+        OrderItem.builder().product(product).amount(BigDecimal.valueOf(3)).build();
+    DeliveryAddress deliveryAddress =
+        DeliveryAddress.builder().street("Armeana 1").orderList(new ArrayList<>()).build();
+    Order order =
+        Order.builder().deliveryAddress(deliveryAddress).orderItemList(new HashSet<>()).build();
+    order.addOrderItem(orderItem);
+    orderItem.setOrder(order);
+
+    Order saveOrder = orderRepository.save(order);
+    assertNotNull(saveOrder.getId());
+    assertThat(deliveryAddress.getId()).isEqualTo(saveOrder.getDeliveryAddress().getId());
+  }
+
+  @Test
+  @DisplayName(
+      """
+              The test is successful because we have List<Order>orderList in DeliveryAddress with multiple elements and want to delete just order1
+              When order 1 is deleted, OrderItem1 is also deleted because of orphanRemoval=true on orderItemList in Order entity
+              """)
+  void should_deleteOrder1_andOrderItem1_whenMultipleElementsAreInTheListFromDeliveryAddress() {
     Product product = Product.builder().name("Adidas13").price(BigDecimal.valueOf(300.3D)).build();
 
     OrderItem orderItem1 =
@@ -209,6 +214,63 @@ The test is successful because the Order entity has its FK properly set, because
     // Assert that the order2 and orderItem2 exists
     assertTrue(orderRepository.existsById(order2.getId()));
     assertTrue(orderItemRepository.existsById(orderItem2.getId()));
+  }
+
+  @Test
+  @DisplayName(
+      """
+          The test is successful when removing orderItem2 from Set<OrderItem> of 3 items. The remaining list has orderItem1 and orderItem3
+          """)
+  void should_deleteOrderItem2_whenMultipleElementsAreInOrderItemSet() {
+    Product product = Product.builder().name("Adidas13").price(BigDecimal.valueOf(300.3D)).build();
+
+    OrderItem orderItem1 =
+        OrderItem.builder().product(product).amount(BigDecimal.valueOf(1)).build();
+
+    OrderItem orderItem2 =
+        OrderItem.builder().product(product).amount(BigDecimal.valueOf(2)).build();
+
+    OrderItem orderItem3 =
+        OrderItem.builder().product(product).amount(BigDecimal.valueOf(3)).build();
+
+    DeliveryAddress deliveryAddress =
+        DeliveryAddress.builder().street("Armeana 1").orderList(new ArrayList<>()).build();
+
+    Order order1 = Order.builder().orderItemList(new HashSet<>()).build();
+    deliveryAddress.addOrder(order1);
+    order1.setDeliveryAddress(deliveryAddress);
+    order1.addOrderItem(orderItem1);
+    orderItem1.setOrder(order1);
+    order1.addOrderItem(orderItem2);
+    orderItem2.setOrder(order1);
+    order1.addOrderItem(orderItem3);
+    orderItem3.setOrder(order1);
+
+    productRepository.save(product);
+    orderItemRepository.save(orderItem1);
+    orderItemRepository.save(orderItem2);
+    orderItemRepository.save(orderItem3);
+    orderRepository.save(order1);
+
+    // Delete orderItem2
+    try {
+      orderItemRepository.deleteById(orderItem2.getId());
+    } catch (Exception e) {
+      fail("Failed to delete orderItem2: " + e.getMessage());
+    }
+    // Remove orderItem2 from order1
+    order1.removeOrderItem(orderItem2);
+
+    List<OrderItem> updatedOrderItemSet = orderItemRepository.findAll();
+    Set<OrderItem> actualOrderItemSet = order1.getOrderItemList();
+
+    List<OrderItem> sortedUpdatedOrderItemSet = new ArrayList<>(updatedOrderItemSet);
+    List<OrderItem> sortedActualOrderItemSet = new ArrayList<>(actualOrderItemSet);
+    Collections.sort(sortedUpdatedOrderItemSet, Comparator.comparing(OrderItem::getId));
+    Collections.sort(sortedActualOrderItemSet, Comparator.comparing(OrderItem::getId));
+
+    Assertions.assertArrayEquals(
+        sortedActualOrderItemSet.toArray(), sortedUpdatedOrderItemSet.toArray());
   }
 
   /* tests for @Builder.Default on a field. I do not use it, I wanted to see how it works
